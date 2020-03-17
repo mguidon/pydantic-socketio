@@ -46,7 +46,12 @@ class AsyncApiParser:
         if not self.template_data:
             self.read_template()
 
+        # modify spec data to accomodate for inline schemas 
+        self.parse_inline_schemas()
+
+         # read schemas from async api
         schemas = self.spec_data["components"]["schemas"]
+
         self.template_data["components"]["schemas"] = schemas
         with tempfile.NamedTemporaryFile() as fp:
             tmp_file = Path(fp.name)
@@ -59,6 +64,38 @@ class AsyncApiParser:
             if rc:
                 logger.error(err.decode("utf-8"))
 
+    def parse_inline_schemas(self):
+        messages = self.spec_data["components"]["messages"]
+        schemas = self.spec_data["components"]["schemas"]
+        for m ,d in messages.items():
+            if "payload" in d and "properties" in  d["payload"]:
+                schema = d["payload"]
+                schema_name = m[0].capitalize() + m[1:]
+                schemas[schema_name] = schema
+                d["payload"] = { "$ref" : f'#/components/schemas/{schema_name}'}
+
+    def parse_handlers(self):
+        channels = self.spec_data["channels"]["socket.io"]
+        outgoing = channels["subscribe"]
+        incoming = channels["publish"]
+
+        messages = self.spec_data["components"]["messages"]
+
+        def get_schema(msg) -> (str, str):
+            msg_key = msg["$ref"].split("/")[-1]
+            if "payload" in messages[msg_key]:
+                schema = messages[msg_key]["payload"]["$ref"].split("/")[-1]
+            else:
+                schema = "None"
+            return msg_key, schema
+
+        for o in outgoing["message"]["oneOf"]:
+            print(get_schema(o))
+
+        for i in incoming["message"]["oneOf"]:
+            print(get_schema(i))
+
+       
 
 
 def get_parser():
@@ -73,15 +110,14 @@ def main(args=None):
     parser = get_parser()
     args = parser.parse_args(args)
     if None in [args.spec_file, args.template_file, args.model_file]:
-        parser.error("--spec_file and --template_file are  required")
+        parser.error("--spec_file, --template_file and --model_file are required")
 
     spec_file = Path(args.spec_file)
     template_file = Path(args.template_file)
     model_file = Path(args.model_file)
     parser = AsyncApiParser(spec_file, template_file, model_file)
     parser.parse_schemas()
-
-
+    parser.parse_handlers()
 
 if __name__ == '__main__':
     main()

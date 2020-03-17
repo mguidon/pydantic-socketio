@@ -178,7 +178,7 @@ components:
           path:
             type: string
           value:
-            type: {}
+            type: object
     propertyChange:
       name: propertyChange
       summary: User changes a model entity property value.
@@ -197,7 +197,7 @@ components:
           path:
             type: string
           value:
-            type: {}
+            type: object
     modelEntitySelect:
       name: modelEntitySelect
       summary: User selects one or several model entities
@@ -240,7 +240,7 @@ components:
     newDocument:
       name: newDocument
       summary: Creates new document without saving the old one
-      payload: {}
+      #payload: object
     backgroundColorChange:
       name: backgroundColorChange
       summary: Sends a new background color for the modeler
@@ -253,8 +253,8 @@ components:
             type: array
             items:
               type: number
-            minItems: 3
-            maxitems: 3
+            # minItems: 3
+            # maxitems: 3
   schemas:
     Tool:
       type: object
