@@ -16,8 +16,8 @@ class AsyncApiParser:
         self.spec_file = spec_file
         self.template_file = template_file
         self.model_file = model_file
-        self.spec_data = ""
-        self.template_data = ""
+        self.spec_data = self.read_yaml(self.spec_file)
+        self.template_data = self.read_yaml(self.template_file)
 
     def read_yaml(self, filename: Path) -> str:
         with open(filename, 'r') as stream:
@@ -34,18 +34,7 @@ class AsyncApiParser:
             except yaml.YAMLError as exc:
                 print(exc)
 
-    def read_spec(self):
-        self.spec_data = self.read_yaml(self.spec_file)
-
-    def read_template(self):
-        self.template_data = self.read_yaml(self.template_file)
-
     def parse_schemas(self):
-        if not self.spec_data:
-            self.read_spec()
-        if not self.template_data:
-            self.read_template()
-
         # modify spec data to accomodate for inline schemas 
         self.parse_inline_schemas()
 
@@ -94,9 +83,6 @@ class AsyncApiParser:
 
         for i in incoming["message"]["oneOf"]:
             print(get_schema(i))
-
-       
-
 
 def get_parser():
     parser = argparse.ArgumentParser()
