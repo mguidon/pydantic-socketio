@@ -3,7 +3,7 @@
 .PHONY: create_models
 
 create_models: ## create pydantic models from spec file
-	
+	python parser/parse_asyncapi.py --spec_file=specs/async-api.yml --template_file=specs/template.yml --model_file=model/model.py
 
 .venv: ## creating virtual environment
 	@python3 -m venv $@

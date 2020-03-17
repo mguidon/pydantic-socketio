@@ -1,5 +1,6 @@
 aiologger
 aiohttp
+datamodel-code-generator
 pydantic
 python-socketio
 pyyaml
