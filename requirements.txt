@@ -1,3 +1,6 @@
+aiologger
 aiohttp
+pydantic
 python-socketio
+pyyaml
 requests

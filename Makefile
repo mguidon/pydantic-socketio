@@ -1,5 +1,10 @@
 .DEFAULT_GOAL := help
 
+.PHONY: create_models
+
+create_models: ## create pydantic models from spec file
+	
+
 .venv: ## creating virtual environment
 	@python3 -m venv $@
 	# updating package managers

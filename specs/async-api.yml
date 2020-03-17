@@ -1,0 +1,391 @@
+asyncapi: 2.0.0
+info:
+  title: Sim4Web application
+  version: 0.0.0
+servers:
+  development:
+    url: 172.16.9.154:8080
+    protocol: ws
+    description: S4L Server
+channels:
+  socket.io:
+    ##
+    # Defined from the perspective of the client.
+    ##
+    subscribe:
+      summary: List of server messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/tools'
+          - $ref: '#/components/messages/actions'
+          - $ref: '#/components/messages/options'
+          - $ref: '#/components/messages/properties'
+          - $ref: '#/components/messages/modelEntities'
+          - $ref: '#/components/messages/render'
+    publish:
+      summary: List of client messages
+      message:
+        oneOf:
+          - $ref: '#/components/messages/toolSelect'
+          - $ref: '#/components/messages/actionSelect'
+          - $ref: '#/components/messages/optionChange'
+          - $ref: '#/components/messages/propertyChange'
+          - $ref: '#/components/messages/modelEntitySelect'
+          - $ref: '#/components/messages/mouseInput'
+          - $ref: '#/components/messages/keyboardInput'
+          - $ref: '#/components/messages/resize'
+          - $ref: '#/components/messages/quality'
+          - $ref: '#/components/messages/loadDocument'
+          - $ref: '#/components/messages/newDocument'
+          - $ref: '#/components/messages/backgroundColorChange'
+components:
+  messages:
+    # Server
+    tools:
+      name: tools
+      summary: Updates the list of available tools.
+      description: >
+        Tools are retreived when the client starts and connects and can be hierarchically
+        organised in categories.
+      payload:
+        type: object
+        required:
+          - tools
+        properties:
+          tools:
+            type: array
+            items:
+              anyOf:
+                - $ref: '#/components/schemas/Tool'
+                - $ref: '#/components/schemas/ToolCategory'
+    options:
+      name: options
+      summary: Sends the list of options and their values, for the selected tool.
+      description: >
+        When a tool is selected, its options are displayed to the user.
+        These options can be modified from the user (``optionChange`` event),
+        but also the server can update them.
+      payload:
+        type: object
+        required:
+         - options
+        properties:
+          options:
+            $ref: '#/components/schemas/Options'
+    actions:
+      name: actions
+      summary: Updates the list of available actions for the tool
+      description: >
+        Some tools can display a set of actions that correlate to tool options, but are
+        displayed differently.
+      payload:
+        type: object
+        required:
+          - actions
+        properties:
+          actions:
+            type: array
+            items:
+              $ref: '#/components/schemas/Tool'
+    properties:
+      name: properties
+      summary: Updates de list of properties and their values, for the selected tool.
+      description: >
+        When a model entity is selected, its properties are displayed to the user.
+        These options can be modified from the user (``propertyChange`` event),
+        but also the server can update them.
+      payload:
+        type: object
+        required:
+         - properties
+        properties:
+          properties:
+            $ref: '#/components/schemas/Properties'
+    modelEntities:
+      name: modelEntities
+      summary: Model entities tree.
+      description: >
+        Contains all the necessary information to build the model entity tree.
+      payload:
+        type: object
+        required:
+          - modelEntities
+        properties:
+          modelEntities:
+            $ref: '#/components/schemas/ModelEntities'
+    render:
+      name: render
+      summary: Transmits a new renderer image of the modeler to the client.
+      description: >
+        Remote update of the modeler view with a new rendered image. This optionally includes
+        a set of ``OverlayMeasure``s that have to be rendered on top of the model at the given
+        coordinates.
+      payload:
+        type: object
+        required:
+          - renderImage
+        properties:
+          renderImage:
+            $ref: '#/components/schemas/RenderImage'
+          overlayMeasures:
+            type: array
+            items:
+              $ref: '#/components/schemas/OverlayMeasure'
+    # Client
+    toolSelect:
+      name: toolSelect
+      summary: User selects a tool.
+      description: >
+        Event sent when the user selects a tool. After that, a new ``Tools`` event
+        is expected from the server to confirm that selection. An ``Options`` and possibly
+        ``Actions`` events are also expected.
+      payload:
+        type: object
+        required:
+          - id
+        properties:
+          id:
+            type: string
+    actionSelect:
+      name: actionSelect
+      summary: User selects an action.
+      description: >
+        Event sent when the user selects an action. After that, a new ``Actions`` event
+        is expected from the server to confirm that selection. Actions are linked to tool options
+        so maybe an ``Options`` should be expected.
+      payload:
+        type: object
+        required:
+          - id
+        properties:
+          id:
+            type: string
+    optionChange:
+      name: optionChange
+      summary: User changes a tool option value.
+      description: >
+        Sent when the user changes a field in the tool options form. A new ``Options`` message
+        confirms the modification.
+      payload:
+        type: object
+        required:
+          - id
+          - path
+          - value
+        properties:
+          id:
+            type: string
+          path:
+            type: string
+          value:
+            type: {}
+    propertyChange:
+      name: propertyChange
+      summary: User changes a model entity property value.
+      description: >
+        Sent when the user changes a field in the model entity properties form.
+        A new ``Properties`` message confirms the modification.
+      payload:
+        type: object
+        required:
+          - id
+          - path
+          - value
+        properties:
+          id:
+            type: string
+          path:
+            type: string
+          value:
+            type: {}
+    modelEntitySelect:
+      name: modelEntitySelect
+      summary: User selects one or several model entities
+      description: >
+        Sent when the user changes the selection of model entities.
+      payload:
+        type: object
+        required:
+          - selectedIds
+        properties:
+          selectedIds:
+            type: array
+            items:
+              type: string
+    mouseInput:
+      name: mouseInput
+      summary: Sends a mouse user input.
+      payload:
+        $ref: '#/components/schemas/MouseInput'
+    keyboardInput:
+      name: keyboardInput
+      summary: Sends a keyboard user input.
+      payload:
+        $ref: '#/components/schemas/KeyboardInput'
+    resize:
+      name: resize
+      summary: Sends new dimensions for 3d view
+      payload:
+        $ref: '#/components/schemas/Resize'
+    quality:
+      name: quality
+      summary: Change jpeg compression quality
+      payload:
+        $ref: '#/components/schemas/Quality'
+    loadDocument:
+      name: loadDocument
+      summary: Load smash file from working directory
+      payload:
+        $ref: '#/components/schemas/LoadDocument'
+    newDocument:
+      name: newDocument
+      summary: Creates new document without saving the old one
+      payload: {}
+    backgroundColorChange:
+      name: backgroundColorChange
+      summary: Sends a new background color for the modeler
+      payload:
+        type: object
+        required:
+          - color
+        properties:
+          color:
+            type: array
+            items:
+              type: number
+            minItems: 3
+            maxitems: 3
+  schemas:
+    Tool:
+      type: object
+      required:
+        - id
+        - label
+        - tooltip
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        tooltip:
+          type: string
+        selected:
+          type: boolean
+          default: false
+        enabled:
+          type: boolean
+          default: true
+        icon:
+          type: string
+    ToolCategory:
+      type: object
+      required:
+        - name
+        - tools
+      properties:
+        name:
+          type: string
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+    Options:
+      type: object
+    Properties:
+      type: object
+    RenderImage:
+      type: object
+    ScreenPosition:
+      type: object
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+        y:
+          type: integer
+    OverlayMeasure:
+      type: object
+      required:
+        - id
+        - pos
+        - value
+        - unit
+      properties:
+        id:
+          type: string
+        pos:
+          $ref: '#/components/schemas/ScreenPosition'
+        value:
+          type: string
+        unit:
+          type: string
+
+    ModelEntities:
+      type: object
+    MouseInput:
+      type: object
+      required:
+        - pos
+        - type
+      properties:
+        pos:
+          $ref: '#/components/schemas/ScreenPosition'
+        type:
+          type: string
+          enum:
+            - up
+            - down
+            - move
+            - dbl
+            - wheel
+        modifiers:
+          type: integer  
+          description: "bitmask: 0 = none, 1 = Shift, 2 = Ctrl, 4 = Alt"
+        button:
+          type: integer 
+          description: "0 = none, 1 = left, 2 = middle, 3 = right"
+        delta:
+          type: integer
+          description: "Mouse wheel delta, +/- 120"
+    KeyboardInput:
+      type: object
+      required:
+        - keyCode
+        - modifiers
+      properties:
+        keyCode:
+          type: integer
+        modifiers:
+          type: integer
+          description: "bitmask: 0 = none, 1 = Shift, 2 = Ctrl, 4 = Alt"
+    Resize:
+      type: object
+      required:
+        - height
+        - width
+      properties:
+        height:
+          type: integer
+        width:
+          type: integer
+    Quality:
+      type: object
+      required:
+        - quality
+      properties:
+        quality:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "0 means no compression, 100 lossless, default 75"
+    LoadDocument:
+      type: object
+      required:
+        - fileName
+      properties:
+        fileName:
+          type: string
+          description: "filename inlcuding .smash"
+
