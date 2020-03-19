@@ -44,7 +44,6 @@ class Type(Enum):
     dbl = 'dbl'
     wheel = 'wheel'
 
-
 class OptionChange(BaseModel):
     id: str
     path: str
@@ -121,6 +120,9 @@ class MouseInput(BaseModel):
     )
     pos: ScreenPosition
     type: Type
+    class Config:
+        use_enum_values = True
+
 
 
 class OverlayMeasure(BaseModel):
